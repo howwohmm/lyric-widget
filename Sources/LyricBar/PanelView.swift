@@ -1,6 +1,11 @@
 import SwiftUI
 
 /// Matches the stock desktop widgets: 24pt corner radius, thin material, generous padding.
+enum PanelMetrics {
+    /// Card width. Height is whatever the content needs.
+    static let contentWidth: CGFloat = 380
+}
+
 struct PanelView: View {
     @ObservedObject var engine: SyncEngine
 
@@ -11,8 +16,11 @@ struct PanelView: View {
             header
             content
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(18)
+        // Fixed width, hugging height: an unbounded maxHeight makes NSHostingView
+        // report an enormous intrinsic size and the window stretches to match.
+        .frame(width: PanelMetrics.contentWidth, alignment: .leading)
+        .fixedSize(horizontal: false, vertical: true)
         .background(background)
         .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
     }
@@ -66,7 +74,8 @@ struct PanelView: View {
                 } else {
                     KaraokeText(text: cur, progress: engine.progress,
                                 base: .white.opacity(0.45), fill: .white)
-                        .font(.system(size: 19, weight: .semibold, design: .rounded))
+                        .font(.system(size: 19, weight: .semibold))
+                        .lineSpacing(3)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             } else {
@@ -79,8 +88,9 @@ struct PanelView: View {
 
     @ViewBuilder private func line(_ s: String?, size: CGFloat, opacity: Double) -> some View {
         Text(s ?? " ")
-            .font(.system(size: size, weight: .medium, design: .rounded))
+            .font(.system(size: size, weight: .medium))
             .foregroundStyle(.white.opacity(opacity))
+            .lineSpacing(2)
             .lineLimit(2)
             .fixedSize(horizontal: false, vertical: true)
     }
@@ -91,6 +101,7 @@ struct PanelView: View {
             Text(text).font(.system(size: 13, weight: .medium, design: .rounded))
         }
         .foregroundStyle(.white.opacity(0.55))
-        .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 6)
     }
 }

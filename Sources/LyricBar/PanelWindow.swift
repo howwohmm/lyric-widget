@@ -31,8 +31,13 @@ final class PanelWindow: NSWindow {
         isExcludedFromWindowsMenu = true
         animationBehavior = .none
 
-        contentView = NSHostingView(rootView: root)
+        let host = NSHostingView(rootView: root)
+        // Let SwiftUI drive the height; without this the window keeps whatever
+        // size it was created with and the card floats in a too-tall box.
+        host.sizingOptions = [.intrinsicContentSize]
+        contentView = host
         restoreFrame(defaultSize: size)
+        resizeToFit()
     }
 
     /// Clamp into a visible screen so a disconnected display never strands the panel.
@@ -50,6 +55,20 @@ final class PanelWindow: NSWindow {
 
     func persistFrame() {
         UserDefaults.standard.set(NSStringFromRect(frame), forKey: Self.frameKey)
+    }
+
+    /// Shrink-wrap the window to the SwiftUI content, keeping the TOP-LEFT corner
+    /// anchored. NSWindow's origin is bottom-left, so a naive setFrame would make the
+    /// card appear to jump upward every time a lyric line wraps to a second row.
+    func resizeToFit() {
+        guard let host = contentView else { return }
+        let fitting = host.fittingSize
+        guard fitting.height > 1, abs(fitting.height - frame.height) > 0.5 else { return }
+        let top = frame.maxY
+        var f = frame
+        f.size = NSSize(width: PanelMetrics.contentWidth, height: fitting.height)
+        f.origin.y = top - fitting.height
+        setFrame(f, display: true)
     }
 
     func setClickThrough(_ on: Bool) { ignoresMouseEvents = on }
