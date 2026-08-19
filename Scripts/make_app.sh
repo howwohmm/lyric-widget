@@ -2,7 +2,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 APP="build/LyricBar.app"
-IDENT="Apple Development: mishraom.work@icloud.com (TJ7LBM77LA)"
+# Signing identity: override with SIGN_IDENTITY, else use the first Apple
+# Development cert in the keychain, else fall back to ad-hoc.
+IDENT="${SIGN_IDENTITY:-$(security find-identity -v -p codesigning \
+  | grep -m1 "Apple Development" | sed -E 's/.*"(.*)"/\1/')}"
+IDENT="${IDENT:--}"
+echo "signing as: $IDENT"
 
 swift build -c release
 rm -rf "$APP"
